@@ -1,0 +1,5 @@
+{
+  "name": "BaiCurex DSS",
+  "description": "A medical Decision Support System (DSS) for automated EEG and ECG analysis, featuring smart triage and AI-assisted clinical summaries.",
+  "requestFramePermissions": []
+}

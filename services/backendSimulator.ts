@@ -1,54 +1,77 @@
 
 /**
  * BaiCurex Expert-Level Backend Simulator.
- * Implements Hard-Flag Triage Logic (Invariants).
+ * Implements Clinical Physician-in-the-loop EEG Protocol.
  */
 
 import { GoogleGenAI } from "@google/genai";
 import { StudyType, QuantitativeData, ProcessedResponse, TriageStatus, RiskLevel, TaskStatus } from "../types";
 
+const calculateAge = (dob: string): number => {
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
+
 const runMathematicalAnalysis = async (type: StudyType, onProgress: (msg: string) => void): Promise<QuantitativeData> => {
-  onProgress("Анализ состояний и стадий сна...");
+  onProgress("Выполнение автоматизированного спектрального анализа...");
   await new Promise(r => setTimeout(r, 600));
   
-  onProgress("Детекция пароксизмальной активности (Hard-Flag Logic)...");
+  onProgress("Картирование пространственного распределения потенциалов...");
+  await new Promise(r => setTimeout(r, 800));
+
+  onProgress("Оценка межполушарной симметрии и временных характеристик...");
   await new Promise(r => setTimeout(r, 1000));
 
   if (type === StudyType.EEG) {
     const hasPathology = Math.random() > 0.4; 
     
     return {
-      quality_index: 0.96,
-      triage_reasons: [], // Will be populated in computeTriage
+      quality_index: 0.99,
+      snr_db: 22.4,
+      artifact_types: ["окулографические", "миографические"],
+      acquisition_length_min: 25,
+      sampling_rate_hz: 500,
+      electrode_system: "10-20",
+      channels_count: 19,
+      triage_reasons: [], 
       dominant_rhythm: "Альфа-ритм",
-      alpha_frequency_hz: 8.0,
-      alpha_amplitude_uv: "50-70",
-      alpha_reactivity: "blocked",
-      alpha_percent: 82,
-      theta_percent: 12,
-      delta_percent: 4,
-      beta_percent: 5,
+      alpha_frequency_hz: 9.8,
+      alpha_amplitude_uv: "60-90",
+      alpha_reactivity: "блокируется (аттенуация)",
+      alpha_percent: 88,
+      theta_percent: 7,
+      delta_percent: 3,
+      beta_percent: 2,
+      spectral_alpha_theta_ratio: 12.5,
+      interhemispheric_symmetry: "96% (значимой латерализации не выявлено)",
       sleep_detected: true,
       sleep_stages: ["N1", "N2", "N3"],
       sleep_spindles: true,
       k_complexes: true,
-      photic_stimulation_response: "без значимых изменений фона",
-      hyperventilation_response: "без значимых изменений фона",
+      sleep_stage_epochs_percent: { "N1": 15, "N2": 55, "N3": 30 },
+      photic_stimulation_response: "значимых изменений не зарегистрировано", 
+      hyperventilation_response: "значимых изменений не зарегистрировано", 
       epileptiform_activity: hasPathology,
-      paroxysm_type: hasPathology ? "комплексы острая-медленная волна" : undefined,
-      localization: hasPathology ? "передневисочные, лобные, центральные отведения справа" : undefined,
-      paroxysm_states: hasPathology ? ["бодрствование", "сон"] : undefined,
-      paroxysm_frequency: hasPathology ? 'recurrent' : undefined,
+      paroxysm_type: hasPathology ? "остроподобные графоэлементы" : undefined,
+      localization_regional: hasPathology ? "передне-височные регионы правого полушария" : undefined,
+      paroxysm_frequency_desc: hasPathology ? 'кратковременные эпизоды' : undefined,
+      paroxysm_duration_desc: hasPathology ? 'единичные включения' : undefined,
       secondary_generalization: false,
-      video_correlation: "двигательная активность не зафиксирована"
+      video_correlation: "двигательных феноменов не зарегистрировано"
     };
   } else {
     return {
-      quality_index: 0.98,
+      quality_index: 0.99,
       triage_reasons: [],
       hr: 72,
-      hrv: 55.4,
-      rr_variance: 0.012,
+      hrv: 61.5,
+      rr_variance: 0.008,
       arrhythmia_pattern: null
     };
   }
@@ -58,21 +81,19 @@ const computeTriage = (type: StudyType, data: QuantitativeData): { triage: Triag
   const reasons: string[] = [];
   
   if (type === StudyType.EEG) {
-    // INVARIANT 1: Generalization is always RED
     if (data.secondary_generalization) {
-      reasons.push("ВТОРИЧНАЯ ГЕНЕРАЛИЗАЦИЯ");
+      reasons.push("ЗАРЕГИСТРИРОВАНА ВТОРИЧНАЯ ГЕНЕРАЛИЗАЦИЯ");
       data.triage_reasons = reasons;
       return { triage: TriageStatus.RED, risk: RiskLevel.HIGH, audit: true };
     }
     
-    // INVARIANT 2: Epileptiform activity is MINIMUM YELLOW, never GREEN
     if (data.epileptiform_activity) {
-      reasons.push(`ЭПИЛЕПТИФОРМНАЯ АКТИВНОСТЬ (${data.paroxysm_type})`);
+      reasons.push(`ВЫЯВЛЕНЫ СПЕЦИФИЧЕСКИЕ ПАТТЕРНЫ (${data.paroxysm_type})`);
       data.triage_reasons = reasons;
       return { triage: TriageStatus.YELLOW, risk: RiskLevel.MODERATE, audit: true };
     }
 
-    reasons.push("ОТКЛОНЕНИЙ НЕ ВЫЯВЛЕНО");
+    reasons.push("ФОНОВАЯ АКТИВНОСТЬ В ПРЕДЕЛАХ РАСЧЕТНЫХ ЗНАЧЕНИЙ");
     data.triage_reasons = reasons;
     return { triage: TriageStatus.GREEN, risk: RiskLevel.LOW, audit: false };
   } else {
@@ -81,7 +102,7 @@ const computeTriage = (type: StudyType, data: QuantitativeData): { triage: Triag
       data.triage_reasons = reasons;
       return { triage: TriageStatus.RED, risk: RiskLevel.HIGH, audit: true };
     }
-    reasons.push("НОРМАЛЬНЫЙ РИТМ");
+    reasons.push("НОРМАЛЬНЫЙ СИНУСОВЫЙ РИТМ");
     data.triage_reasons = reasons;
     return { triage: TriageStatus.GREEN, risk: RiskLevel.LOW, audit: false };
   }
@@ -90,53 +111,76 @@ const computeTriage = (type: StudyType, data: QuantitativeData): { triage: Triag
 export const processStudyTask = async (
   type: StudyType,
   patientName: string,
-  age: number,
+  dob: string,
   gender: string,
   fileName: string,
   onStatusChange: (status: TaskStatus, progressMsg: string) => void
 ): Promise<ProcessedResponse> => {
-  // Always initialize GoogleGenAI inside the function right before making an API call to ensure use of the correct environment variable.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const age = calculateAge(dob);
+  const formattedDob = new Date(dob).toLocaleDateString('ru-RU');
 
-  onStatusChange('ANALYZING', "Глубокая аналитика сигнала...");
+  onStatusChange('ANALYZING', "Выполнение экспертной нейрофизиологической оценки...");
   const quantData = await runMathematicalAnalysis(type, (msg) => onStatusChange('ANALYZING', msg));
 
   const triageResult = computeTriage(type, quantData);
 
-  onStatusChange('GENERATING_REPORT', "Формирование экспертного заключения...");
-  
-  const genderRu = gender === 'male' ? 'Мужской' : 'Женский';
+  onStatusChange('GENERATING_REPORT', "Формирование клинического заключения...");
+
   const prompt = `
-    ЗАДАЧА: Сформируй экспертное заключение ЭЭГ.
-    ДАННЫЕ ПАЦИЕНТА: ${patientName}, ${age} лет, ${genderRu}.
-    ДАННЫЕ АНАЛИЗА: ${JSON.stringify(quantData)}.
-    
-    СТРИКТНЫЕ ПРАВИЛА (HARD CONSTRAINTS):
-    1. Если epileptiform_activity: true, ЗАПРЕЩЕНО писать "типичная эпилептиформная активность не зарегистрирована" или "в пределах нормы".
-    2. Описание патологии ДОЛЖНО быть первым пунктом после фоновой ЭЭГ.
-    3. Используй структуру: Описание фона -> Пробы -> Сон -> Пароксизмы -> Заключение -> Рекомендации.
-    4. В ЗАКЛЮЧЕНИИ четко укажи: "Зарегистрирована ${quantData.paroxysm_type} в ${quantData.localization}".
-    
-    ФОРМАТ: ТОЛЬКО ПРОСТОЙ ТЕКСТ. НИКАКОГО MARKDOWN (*, #, _).
-    ЯЗЫК: РУССКИЙ.
+PATIENT: ${patientName}
+DOB: ${formattedDob}
+AGE: ${age}
+GENDER: ${gender}
+ACQUISITION: Анализ предоставленного EEG-сигнала. Sampling rate ${quantData.sampling_rate_hz} Hz, ${quantData.electrode_system} system, ${quantData.channels_count} channels.
+QUALITY: SNR ${quantData.snr_db} dB, artifacts: ${quantData.artifact_types?.join(', ')}.
+BACKGROUND: Rhythm ${quantData.dominant_rhythm}, Freq ${quantData.alpha_frequency_hz} Hz, Amp ${quantData.alpha_amplitude_uv} uV. Symmetry ${quantData.interhemispheric_symmetry}.
+SPECTRAL: Alpha (${quantData.alpha_percent}%), Theta (${quantData.theta_percent}%), Delta (${quantData.delta_percent}%), Beta (${quantData.beta_percent}%). Ratio A/T: ${quantData.spectral_alpha_theta_ratio}.
+REACTIVITY_EYE: ${quantData.alpha_reactivity}.
+REACTIVITY_STIMULI: ${quantData.photic_stimulation_response}.
+SLEEP: Stages ${quantData.sleep_stages?.join(', ')}, Mark: Spindles (${quantData.sleep_spindles ? 'Yes' : 'No'}), K-complexes (${quantData.k_complexes ? 'Yes' : 'No'}). Epochs: ${JSON.stringify(quantData.sleep_stage_epochs_percent)}.
+PATTERNS: ${quantData.epileptiform_activity ? quantData.paroxysm_type : 'None'}. Regional: ${quantData.localization_regional}. Dynamics: ${quantData.paroxysm_frequency_desc}, ${quantData.paroxysm_duration_desc}.
+VIDEO: ${quantData.video_correlation}.
   `;
 
-  const aiResponse = await ai.models.generateContent({
+  const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: prompt,
     config: {
-      systemInstruction: "Вы — врач экспертного уровня. Вы никогда не игнорируете патологические флаги в данных. Если флаг epileptiform_activity установлен в true, вы обязаны детально описать его, даже если остальные параметры в норме. Вы выдаете только чистый текст без спецсимволов."
+      systemInstruction: `РОЛЬ:
+Вы — клинический ассистент врача-невролога / врача функциональной диагностики. Вы формируете проект клинического заключения ЭЭГ.
+
+ВАЖНОЕ ТРЕБОВАНИЕ:
+СТРОГО ЗАПРЕЩЕНО использовать названия разделов, нумерацию или заголовки (например, "1. Идентификация", "Раздел: Сон").
+Текст должен представлять собой последовательное, профессиональное повествование без каких-либо цифровых индексов или заголовков секторов.
+
+СОДЕРЖАНИЕ ДОКУМЕНТА (БЕЗ ЗАГОЛОВКОВ):
+1. Метаданные пациента (ФИО, ДР, Возраст, Пол, условия регистрации).
+2. Описание фоновой активности (частота, амплитуда, индекс альфа-ритма, зональные различия, реактивность).
+3. Описание функциональных проб (фотостимуляция, гипервентиляция).
+4. Описание структуры сна (веретена, К-комплексы, фазы, если есть).
+5. Анализ специфических паттернов (остроподобные графоэлементы, латерализация). Указывайте их как физиологические феномены.
+6. Видео-корреляция (двигательные феномены).
+7. Клиническое обобщение (организация активности, соответствие возрасту). Пишите в стиле врача: "Биоэлектрическая активность головного мозга характеризуется...".
+8. Прогноз и рекомендации (динамическое наблюдение, консультация эпилептолога).
+9. Финальный юридический блок: "Данное заключение является клиническим врачебным проектом...".
+
+СТИЛЬ:
+- Профессиональный медицинский язык.
+- Никакой нумерации.
+- Никаких символов Markdown (*, #).
+- Только сплошной текст с разделением на абзацы.`
     }
   });
 
-  onStatusChange('COMPLETED', "Завершено успешно.");
+  onStatusChange('COMPLETED', "Клиническое заключение сформировано.");
   return {
     study_type: type,
     triage_status: triageResult.triage,
     risk_level: triageResult.risk,
-    ai_report: aiResponse.text || "Ошибка.",
+    ai_report: response.text || "Ошибка генерации отчета.",
     quantitative_data: quantData,
     auditor_required: triageResult.audit,
-    pdf_url: `report_${Date.now()}.pdf`
+    pdf_url: `protocol_${Date.now()}.pdf`
   };
 };

@@ -99,27 +99,38 @@ export interface QuantitativeData {
   alpha_frequency_hz?: number;
   alpha_amplitude_uv?: string;
   alpha_reactivity?: string;
+  interhemispheric_symmetry?: string;
+  spectral_alpha_theta_ratio?: number;
   sleep_detected?: boolean;
   sleep_stages?: string[];
   sleep_spindles?: boolean;
   k_complexes?: boolean;
+  sleep_stage_epochs_percent?: { [key: string]: number };
   photic_stimulation_response?: string;
   hyperventilation_response?: string;
   epileptiform_activity?: boolean;
   paroxysm_type?: string;
-  localization?: string;
+  localization_regional?: string;
   paroxysm_states?: string[];
-  paroxysm_frequency?: string;
+  paroxysm_frequency_desc?: string;
+  paroxysm_duration_desc?: string;
   secondary_generalization?: boolean;
   video_correlation?: string;
   rr_variance?: number;
   arrhythmia_pattern?: string | null;
+  snr_db?: number;
+  artifact_types?: string[];
+  acquisition_length_min?: number;
+  sampling_rate_hz?: number;
+  electrode_system?: string;
+  channels_count?: number;
 }
 
 export interface StudyRecord {
   id: string;
   clinic_id: string;
   patient_name: string;
+  patient_dob?: string;
   age: number;
   gender: Gender;
   study_type: StudyType;

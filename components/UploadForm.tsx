@@ -4,7 +4,7 @@ import { StudyType, Gender, TaskStatus } from '../types';
 import { Language, translations } from '../translations';
 
 interface UploadFormProps {
-  onUpload: (type: StudyType, name: string, age: number, gender: Gender, file: File) => void;
+  onUpload: (type: StudyType, name: string, dob: string, gender: Gender, file: File) => void;
   status: TaskStatus;
   progressMsg: string;
   lang: Language;
@@ -14,7 +14,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ onUpload, status, progressMsg, 
   const t = translations[lang];
   const [type, setType] = useState<StudyType>(StudyType.EEG);
   const [name, setName] = useState('');
-  const [age, setAge] = useState<number | ''>('');
+  const [dob, setDob] = useState('');
   const [gender, setGender] = useState<Gender | ''>('');
   const [file, setFile] = useState<File | null>(null);
 
@@ -22,8 +22,8 @@ const UploadForm: React.FC<UploadFormProps> = ({ onUpload, status, progressMsg, 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (file && name && age !== '' && gender !== '') {
-      onUpload(type, name, Number(age), gender as Gender, file);
+    if (file && name && dob && gender !== '') {
+      onUpload(type, name, dob, gender as Gender, file);
     } else {
       alert("Пожалуйста, заполните все поля формы.");
     }
@@ -93,8 +93,8 @@ const UploadForm: React.FC<UploadFormProps> = ({ onUpload, status, progressMsg, 
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-2 block ml-1">{t.age}</label>
-                  <input required type="number" value={age} onChange={(e) => setAge(e.target.value === '' ? '' : parseInt(e.target.value))} className="w-full px-6 py-4 sm:py-5 bg-slate-50 border border-slate-100 text-slate-900 font-bold rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm sm:text-base" placeholder="Возраст" />
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-2 block ml-1">{t.dob}</label>
+                  <input required type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="w-full px-6 py-4 sm:py-5 bg-slate-50 border border-slate-100 text-slate-900 font-bold rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all text-sm sm:text-base" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mb-2 block ml-1">{t.gender}</label>

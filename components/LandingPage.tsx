@@ -1,18 +1,90 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { APP_NAME } from '../constants';
 import { Language, translations } from '../translations';
 
-const epilepsyData = [
-  { year: '2020', incidence: 88, forecast: 88 },
-  { year: '2021', incidence: 105, forecast: 105 },
-  { year: '2022', incidence: 124, forecast: 124 },
-  { year: '2023', incidence: 145, forecast: 145 },
-  { year: '2024', incidence: 170, forecast: 170 },
-  { year: '2025', forecast: 198 },
-  { year: '2026', forecast: 225 },
+const growthData = [
+  { month: 'Jan', volume: 45, nodes: 12 },
+  { month: 'Feb', volume: 52, nodes: 18 },
+  { month: 'Mar', volume: 68, nodes: 24 },
+  { month: 'Apr', volume: 95, nodes: 42 },
+  { month: 'May', volume: 145, nodes: 88 },
+  { month: 'Jun', volume: 190, nodes: 124 },
+  { month: 'Jul', volume: 240, nodes: 186 },
 ];
+
+const InfrastructureHUD: React.FC = () => {
+  return (
+    <div className="relative w-full h-[320px] md:h-[500px] flex items-center justify-center overflow-visible" style={{ perspective: '1200px' }}>
+      <style>{`
+        @keyframes orbit {
+          from { transform: rotateY(0deg) rotateX(20deg); }
+          to { transform: rotateY(360deg) rotateX(20deg); }
+        }
+        @keyframes core-pulse {
+          0%, 100% { transform: scale(1); opacity: 0.9; }
+          50% { transform: scale(1.08); opacity: 1; }
+        }
+        @keyframes float-node {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(5deg); }
+        }
+        .analytical-core {
+          transform-style: preserve-3d;
+          animation: orbit 30s linear infinite;
+        }
+        .hud-ring {
+          position: absolute;
+          border: 1px solid rgba(37, 99, 235, 0.15);
+          border-radius: 50%;
+        }
+      `}</style>
+      
+      {/* Background Glow */}
+      <div className="absolute w-40 h-40 md:w-80 md:h-80 bg-blue-600/10 blur-[80px] md:blur-[120px] rounded-full animate-pulse"></div>
+
+      <div className="analytical-core w-48 h-48 md:w-72 md:h-72 relative flex items-center justify-center">
+        {/* BX Central Unit */}
+        <div className="w-36 h-36 md:w-56 md:h-56 bg-slate-900/40 border border-blue-500/20 rounded-[40px] md:rounded-[64px] absolute flex flex-col items-center justify-center shadow-2xl backdrop-blur-3xl transition-transform hover:scale-105">
+           <div className="text-blue-500 font-black text-5xl md:text-8xl italic tracking-tighter mb-1 animate-[core-pulse_4s_ease-in-out_infinite]">BX</div>
+           <div className="text-[6px] md:text-[9px] font-black text-blue-400/40 uppercase tracking-[0.5em]">Neural Core v2.5</div>
+        </div>
+        
+        {/* Orbital HUD Rings */}
+        <div className="hud-ring w-[280px] h-[280px] md:w-[380px] md:h-[380px]" style={{ transform: 'rotateX(90deg)' }}></div>
+        <div className="hud-ring w-[350px] h-[350px] md:w-[480px] md:h-[480px]" style={{ transform: 'rotateY(90deg)' }}></div>
+        
+        {/* Floating Data Nodes */}
+        {[0, 90, 180, 270].map((deg, i) => (
+          <div 
+            key={i} 
+            className="absolute"
+            style={{ 
+              transform: `rotateY(${deg}deg) translateZ(120px) md:translateZ(200px)`,
+            }}
+          >
+            <div className="bg-white/80 backdrop-blur-md p-3 md:p-4 rounded-2xl shadow-2xl border border-white/50 animate-[float-node_5s_ease-in-out_infinite]" style={{ animationDelay: `${i * 1.2}s` }}>
+              <div className="w-8 md:w-10 h-1 bg-blue-600/30 rounded-full mb-1"></div>
+              <div className="w-5 md:w-6 h-1 bg-blue-400/20 rounded-full"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Scalability HUD Overlay (Minimalist) */}
+      <div className="absolute bottom-[-40px] md:bottom-2 left-1/2 -translate-x-1/2 w-full text-center z-20">
+         <div className="inline-block bg-slate-900/50 backdrop-blur-2xl border border-white/10 px-8 py-6 md:px-12 md:py-10 rounded-[32px] md:rounded-[48px] shadow-2xl transition-all hover:border-blue-500/30">
+            <div className="text-[8px] md:text-[11px] font-black text-blue-400 uppercase tracking-[0.4em] mb-2 md:mb-4">Scalability Index</div>
+            <div className="text-5xl md:text-8xl font-black text-white italic tracking-tighter leading-none mb-2">A+++</div>
+            <div className="text-[9px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+               Diagnostic Infrastructure
+            </div>
+         </div>
+      </div>
+    </div>
+  );
+};
 
 interface FAQItemProps {
   question: string;
@@ -22,20 +94,20 @@ interface FAQItemProps {
 const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="border-b border-slate-200 group">
+    <div className="border-b border-slate-100">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-6 flex justify-between items-center text-left group-hover:text-blue-600 transition-all"
+        className="w-full py-7 md:py-9 flex justify-between items-center text-left hover:bg-slate-50/50 px-2 transition-all rounded-2xl"
       >
-        <span className="text-lg sm:text-xl font-bold tracking-tight pr-4">{question}</span>
-        <div className={`shrink-0 w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center transition-all ${isOpen ? 'bg-blue-600 border-blue-600 text-white rotate-180 shadow-lg shadow-blue-200' : 'text-slate-400'}`}>
+        <span className="text-base md:text-xl font-black tracking-tight pr-8 uppercase italic leading-tight text-slate-800 transition-colors group-hover:text-blue-600">{question}</span>
+        <div className={`shrink-0 w-9 h-9 md:w-11 md:h-11 rounded-full border border-slate-200 flex items-center justify-center transition-all ${isOpen ? 'bg-blue-600 border-blue-600 text-white rotate-180 shadow-lg' : 'text-slate-400'}`}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </button>
-      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[500px] pb-8' : 'max-h-0'}`}>
-        <p className="text-slate-500 font-medium leading-relaxed max-w-3xl whitespace-pre-line">{answer}</p>
+      <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[600px] pb-10 px-2' : 'max-h-0'}`}>
+        <p className="text-slate-500 font-medium leading-relaxed max-w-3xl whitespace-pre-line text-sm md:text-lg pt-5 border-t border-slate-100">{answer}</p>
       </div>
     </div>
   );
@@ -51,68 +123,52 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, lang, onLanguageChan
   const t = translations[lang];
   const [isLangOpen, setIsLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
-
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set(['hero']));
+  
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(event.target as Node)) {
-        setIsLangOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setVisibleSections(prev => new Set(prev).add(entry.target.id));
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('section').forEach(section => observer.observe(section));
+    return () => observer.disconnect();
   }, []);
 
-  const languages: { id: Language; label: string; flag: string }[] = [
-    { id: 'ru', label: 'Русский', flag: 'RU' },
-    { id: 'en', label: 'English', flag: 'EN' },
-    { id: 'kz', label: 'Қазақша', flag: 'KZ' },
+  const languages: { id: Language; label: string }[] = [
+    { id: 'ru', label: 'Русский' },
+    { id: 'en', label: 'English' },
+    { id: 'kz', label: 'Қазақша' },
   ];
 
-  return (
-    <div className="bg-white text-slate-900 overflow-x-hidden font-['Inter']">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center font-black text-white shadow-lg shadow-blue-500/20 text-lg sm:text-xl">B</div>
-            <span className="text-xl sm:text-2xl font-black tracking-tighter italic">{APP_NAME}</span>
-          </div>
-          
-          <div className="flex items-center gap-2 sm:gap-6">
-            <div className="relative" ref={langRef}>
-              <button 
-                onClick={() => setIsLangOpen(!isLangOpen)}
-                className="p-2 sm:p-2.5 hover:bg-slate-100 rounded-xl transition-all flex items-center gap-2 text-slate-600 hover:text-blue-600 group"
-              >
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-                <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">{lang}</span>
-              </button>
+  const isVisible = (id: string) => visibleSections.has(id);
 
+  return (
+    <div className="bg-white text-slate-900 overflow-x-hidden font-['Inter'] selection:bg-blue-600 selection:text-white">
+      <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-2xl z-[100] border-b border-slate-100 h-20 md:h-24">
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+          <div className="flex items-center gap-4 group cursor-pointer">
+            <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-white shadow-2xl shadow-blue-500/30 text-2xl transition-transform group-hover:rotate-12">B</div>
+            <span className="text-2xl font-black tracking-tighter italic uppercase">{APP_NAME}</span>
+          </div>
+          <div className="flex items-center gap-3 sm:gap-8">
+            <div className="relative" ref={langRef}>
+              <button onClick={() => setIsLangOpen(!isLangOpen)} className="px-4 py-2 hover:bg-slate-50 rounded-2xl transition-all flex items-center gap-2 text-slate-500 font-black text-[10px] uppercase tracking-widest">
+                {lang} <svg className={`w-3 h-3 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
+              </button>
               {isLangOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 z-[60] animate-in fade-in zoom-in duration-200">
+                <div className="absolute right-0 mt-3 w-44 bg-white border border-slate-100 rounded-3xl shadow-2xl py-3 z-[110] animate-in fade-in zoom-in">
                   {languages.map((l) => (
-                    <button
-                      key={l.id}
-                      onClick={() => {
-                        onLanguageChange(l.id);
-                        setIsLangOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-3 flex items-center justify-between hover:bg-slate-50 ${lang === l.id ? 'bg-blue-50/50' : ''}`}
-                    >
-                      <span className={`text-xs font-bold ${lang === l.id ? 'text-blue-600' : 'text-slate-600'}`}>{l.label}</span>
-                      <span className="text-[8px] font-black text-slate-300">{l.flag}</span>
+                    <button key={l.id} onClick={() => { onLanguageChange(l.id); setIsLangOpen(false); }} className={`w-full text-left px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors ${lang === l.id ? 'bg-blue-50' : ''}`}>
+                      <span className={`text-[10px] font-black uppercase tracking-widest ${lang === l.id ? 'text-blue-600' : 'text-slate-500'}`}>{l.label}</span>
                     </button>
                   ))}
                 </div>
               )}
             </div>
-
-            <button 
-              onClick={onStart}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 bg-slate-900 text-white rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm hover:bg-black transition-all shadow-xl shadow-slate-200 whitespace-nowrap"
-            >
+            <button onClick={onStart} className="px-6 md:px-10 py-3 md:py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-xl">
               {t.login}
             </button>
           </div>
@@ -120,310 +176,154 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, lang, onLanguageChan
       </nav>
 
       {/* Hero Section */}
-      <header className="pt-32 sm:pt-40 pb-16 sm:pb-24 px-4 sm:px-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_20%,#eff6ff_0%,transparent_50%)] -z-10 opacity-60"></div>
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div className="relative z-10 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest mb-6 border border-blue-100 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-              Centralized AI Infrastructure
+      <header id="hero" className="pt-40 md:pt-56 pb-24 md:pb-32 px-6 bg-white overflow-visible">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+          <div className="z-10 text-center lg:text-left">
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-10 border border-blue-100">
+              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
+              {t.heroSubtitle}
             </div>
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 tracking-tighter leading-[1.1] lg:leading-[0.9] mb-6 sm:mb-8 italic">
-              {t.heroTitle} <span className="text-blue-600 underline decoration-blue-100 underline-offset-8">{t.heroTitleHighlight}</span>
+            <h1 className="text-4xl sm:text-6xl lg:text-8xl font-black text-slate-900 tracking-tighter leading-[1.05] md:leading-[0.95] mb-10 italic uppercase">
+              {t.heroTitle}<br/>
+              <span className="text-blue-600 underline decoration-blue-100 underline-offset-8 decoration-8">{t.heroTitleHighlight}</span>
             </h1>
-            <p className="text-lg sm:text-xl text-slate-500 mb-8 sm:mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
+            <p className="text-lg md:text-2xl text-slate-500 mb-12 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
               {t.heroDesc}
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <button 
-                onClick={onStart}
-                className="w-full sm:w-auto px-10 py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-blue-700 transition-all shadow-2xl shadow-blue-300 transform hover:scale-105"
-              >
-                {t.startButton}
-              </button>
-              <div className="flex items-center gap-4 px-6 text-slate-400 font-bold text-[10px] sm:text-xs uppercase tracking-tighter">
-                <span className="flex items-center gap-2 text-green-500 whitespace-nowrap">
-                  <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
-                  {t.accuracy}
-                </span>
-                <span className="whitespace-nowrap">{t.b2bModel}</span>
-              </div>
-            </div>
+            <button onClick={onStart} className="w-full sm:w-auto px-12 py-6 bg-blue-600 text-white rounded-[32px] font-black uppercase text-sm tracking-[0.2em] hover:bg-blue-700 transition-all shadow-2xl transform hover:-translate-y-1">
+              {t.startButton}
+            </button>
           </div>
-          <div className="relative hidden sm:block [perspective:1500px]">
-             <div className="bg-white/40 backdrop-blur-xl rounded-[40px] shadow-[0_32px_64px_-16px_rgba(15,23,42,0.15)] border border-white/60 p-8 transition-all duration-700 ease-out max-w-lg mx-auto lg:max-w-none [transform-style:preserve-3d] [transform:rotateX(12deg)_rotateY(-18deg)_rotateZ(4deg)] hover:[transform:rotateX(0deg)_rotateY(0deg)_rotateZ(0deg)]">
-                <div className="w-full aspect-square bg-slate-950 rounded-3xl overflow-hidden relative border border-white/10 shadow-inner">
-                   {/* Grid Pattern overlay for tech feel */}
-                   <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
-                   <div className="absolute inset-0 flex items-center justify-center [transform:translateZ(40px)]">
-                      <div className="text-white text-center">
-                         <div className="text-[10px] sm:text-xs font-black text-blue-400 uppercase tracking-[0.4em] mb-4 opacity-80">{t.scalabilityScore}</div>
-                         <div className="text-5xl sm:text-7xl font-black mb-2 tracking-tighter italic">A+++</div>
-                         <div className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest">(Enterprise Grade)</div>
-                      </div>
-                   </div>
-                   {/* Scanning line effect */}
-                   <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-blue-500/10 to-transparent animate-[scan_4s_ease-in-out_infinite] pointer-events-none"></div>
-                </div>
-             </div>
-             {/* Decorative floating elements */}
-             <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-600/10 rounded-full blur-2xl animate-pulse"></div>
-             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-2xl animate-pulse delay-700"></div>
+          <div className="relative mt-12 lg:mt-0">
+            <InfrastructureHUD />
           </div>
         </div>
-        <style>{`
-          @keyframes scan {
-            0%, 100% { transform: translateY(-100%); }
-            50% { transform: translateY(200%); }
-          }
-        `}</style>
       </header>
 
-      {/* Process Section - How it Works */}
-      <section className="py-20 sm:py-32 px-4 sm:px-6 bg-slate-50 border-y border-slate-200 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-16 sm:mb-24">
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tighter italic uppercase mb-6">{t.processTitle}</h2>
-            <div className="p-6 bg-blue-600 text-white rounded-[32px] inline-block shadow-2xl shadow-blue-200">
-               <p className="text-sm sm:text-xl font-black tracking-tight leading-snug">{t.goldenFormula}</p>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-12 sm:gap-16">
+      {/* Trust Stats */}
+      <section id="stats" className="py-24 px-6 border-y border-slate-100 bg-slate-50/50">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.4em] mb-16 text-center">{t.trustTitle}</p>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8">
             {[
-              { title: t.processStep1, desc: t.processStep1Desc, icon: '01' },
-              { title: t.processStep2, desc: t.processStep2Desc, icon: '02' },
-              { title: t.processStep3, desc: t.processStep3Desc, icon: '03' }
-            ].map((step, i) => (
-              <div key={i} className="relative group">
-                {i < 2 && <div className="hidden lg:block absolute top-10 -right-10 w-20 h-[2px] bg-slate-200"></div>}
-                <div className="w-20 h-20 bg-white rounded-3xl shadow-xl flex items-center justify-center font-black text-3xl text-blue-600 mb-8 border border-slate-100 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                  {step.icon}
-                </div>
-                <h3 className="text-2xl font-black mb-4 uppercase italic tracking-tighter">{step.title}</h3>
-                <p className="text-slate-500 font-medium leading-relaxed">{step.desc}</p>
+              { label: t.accuracy, val: '98%' },
+              { label: t.statProcessed, val: '240k+' },
+              { label: t.statEfficiency, val: '×4.5' },
+              { label: t.statCost, val: '-70%' },
+              { label: t.statError, val: '<0.2%' }
+            ].map((stat, i) => (
+              <div key={i} className={`text-center sm:text-left transition-all duration-1000 ${isVisible('stats') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: `${i * 100}ms` }}>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 leading-tight">{stat.label}</p>
+                <p className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter italic">{stat.val}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Economy for Clinics */}
-      <section className="py-20 sm:py-32 bg-slate-950 text-white px-4 sm:px-6 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_80%,#1e3a8a_0%,transparent_40%)] opacity-30"></div>
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-12 sm:mb-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-6xl font-black tracking-tighter mb-4 sm:mb-6 uppercase italic leading-tight">{t.economyTitle}</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto font-medium text-sm sm:text-base">{t.economyDesc}</p>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
-            <div className="p-8 sm:p-12 bg-slate-900 rounded-[32px] sm:rounded-[40px] border border-slate-800 shadow-2xl">
-               <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-6 sm:mb-8">{t.traditionalModel}</div>
-               <div className="space-y-4 sm:space-y-6">
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-4 text-sm sm:text-base">
-                     <span className="text-slate-400">{t.doctorSalary}</span>
-                     <span className="font-bold text-right ml-2">{t.salaryRange}</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-4 text-sm sm:text-base">
-                     <span className="text-slate-400">{t.throughput}</span>
-                     <span className="font-bold text-right ml-2">{t.limited}</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-slate-800 pb-4 text-sm sm:text-base">
-                     <span className="text-slate-400">{t.qualityInterp}</span>
-                     <span className="font-bold text-red-400 text-right ml-2">{t.subjective}</span>
-                  </div>
-                  <div className="flex justify-between items-center pb-4 text-sm sm:text-base">
-                     <span className="text-slate-400">{t.staffDependency}</span>
-                     <span className="font-bold text-red-400 text-right ml-2">{t.critical}</span>
-                  </div>
-               </div>
-            </div>
-
-            <div className="p-8 sm:p-12 bg-blue-600 rounded-[32px] sm:rounded-[40px] shadow-[0_0_50px_rgba(37,99,235,0.3)] relative overflow-hidden border border-blue-400/30">
-               <div className="absolute top-0 right-0 p-8 text-6xl sm:text-8xl font-black opacity-10 italic">AI</div>
-               <div className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200 mb-6 sm:mb-8 relative z-10">BaiCurex DSS Model</div>
-               <div className="space-y-4 sm:space-y-6 relative z-10">
-                  <div className="flex justify-between items-center border-b border-blue-500/50 pb-4 text-sm sm:text-base">
-                     <span className="text-blue-100">{t.centralizedAnalysis}</span>
-                     <span className="font-black text-right ml-2">{t.aiCore}</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-blue-500/50 pb-4 text-sm sm:text-base">
-                     <span className="text-blue-100">{t.scaling}</span>
-                     <span className="font-black text-right ml-2">{t.doctorCapacity}</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-blue-500/50 pb-4 text-sm sm:text-base">
-                     <span className="text-blue-100">{t.qualityInterp}</span>
-                     <span className="font-black text-green-300 text-right ml-2">{t.standardization}</span>
-                  </div>
-                  <div className="flex justify-between items-center pb-4 text-sm sm:text-base">
-                     <span className="text-blue-100">{t.costSavings}</span>
-                     <span className="font-black text-green-300 text-right ml-2">{t.costReduction}</span>
-                  </div>
-               </div>
-               <div className="mt-8 sm:mt-10 p-5 bg-blue-700/80 backdrop-blur-sm rounded-2xl text-center font-black uppercase tracking-widest text-[10px] sm:text-xs border border-white/10 shadow-xl">
-                  {t.marginGrowth}
-               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Investor Trigger Block */}
-      <section className="py-24 sm:py-32 px-4 sm:px-6 bg-white relative overflow-hidden">
+      {/* Investor / Scalability Section (Integrated Chart) */}
+      <section id="investor" className="py-24 md:py-32 px-6 bg-slate-950 text-white text-left overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-center">
-            <div className="lg:w-1/2">
-              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter italic uppercase mb-8 leading-none">
-                {t.investorTitle}
-              </h2>
-              <p className="text-lg sm:text-2xl text-slate-500 font-medium mb-12 leading-relaxed">
-                {t.investorDesc}
-              </p>
-              <div className="grid sm:grid-cols-2 gap-6">
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-20">
+            <div className={`lg:w-1/2 transition-all duration-1000 ${isVisible('investor') ? 'opacity-100' : 'opacity-0 -translate-x-10'}`}>
+              <h2 className="text-5xl md:text-7xl font-black tracking-tighter italic uppercase mb-10 leading-[0.9] text-white">{t.investorTitle}</h2>
+              <p className="text-xl md:text-2xl text-slate-400 mb-16 leading-relaxed font-medium">{t.investorDesc}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 {[
                   { t: t.invTrigger1, d: t.invTrigger1Desc },
                   { t: t.invTrigger2, d: t.invTrigger2Desc },
                   { t: t.invTrigger3, d: t.invTrigger3Desc },
                   { t: t.invTrigger4, d: t.invTrigger4Desc }
                 ].map((item, i) => (
-                  <div key={i} className="p-6 bg-slate-50 rounded-[28px] border border-slate-100 hover:shadow-xl transition-all">
-                    <h4 className="font-black text-slate-900 uppercase italic tracking-tighter mb-2">{item.t}</h4>
-                    <p className="text-xs text-slate-500 font-bold leading-relaxed">{item.d}</p>
+                  <div key={i} className="p-8 bg-white/5 rounded-[40px] border border-white/10 hover:bg-white/10 transition-all group">
+                    <h4 className="font-black text-blue-400 uppercase italic tracking-tighter mb-3 group-hover:translate-x-1 transition-transform">{item.t}</h4>
+                    <p className="text-sm text-slate-500 font-bold leading-relaxed">{item.d}</p>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="lg:w-1/2 relative">
-               <div className="bg-slate-900 rounded-[60px] p-12 sm:p-20 text-white shadow-[0_40px_100px_rgba(15,23,42,0.3)] relative overflow-hidden group">
-                  <div className="absolute -top-20 -right-20 w-80 h-80 bg-blue-600 rounded-full blur-[120px] opacity-20 transition-all group-hover:scale-125"></div>
-                  <div className="text-8xl sm:text-[140px] font-black opacity-5 italic select-none pointer-events-none absolute bottom-10 left-10">SAAS</div>
-                  <div className="relative z-10 space-y-8">
-                     <div className="text-blue-400 font-black uppercase tracking-[0.4em] text-xs">Market Dominance</div>
-                     <p className="text-3xl sm:text-5xl font-black italic tracking-tighter leading-tight">B2B <br/> Recurring <br/> Revenue <br/> Infrastructure</p>
+            
+            {/* Real-time Integrated Chart */}
+            <div className={`lg:w-1/2 w-full bg-slate-900 p-8 md:p-14 rounded-[56px] border border-white/10 relative shadow-3xl transition-all duration-1000 delay-300 ${isVisible('investor') ? 'opacity-100' : 'opacity-0 translate-x-10'}`}>
+               <div className="mb-12 flex justify-between items-center">
+                  <div>
+                    <h4 className="font-black text-blue-400 uppercase italic tracking-tight text-2xl mb-2">Growth Dynamics</h4>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Enterprise Data Flow Forecast</p>
                   </div>
+                  <div className="px-5 py-2 bg-blue-500/10 text-blue-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/20 animate-pulse">Live</div>
+               </div>
+               <div className="h-[300px] md:h-[420px] w-full">
+                 <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={growthData}>
+                       <defs>
+                          <linearGradient id="chartGlow" x1="0" y1="0" x2="0" y2="1">
+                             <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6}/>
+                             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                          </linearGradient>
+                       </defs>
+                       <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                       <XAxis dataKey="month" stroke="#475569" fontSize={11} fontWeight="bold" axisLine={false} tickLine={false} dy={15} />
+                       <YAxis hide />
+                       <Tooltip 
+                          contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '24px', color: '#fff', fontSize: '13px', fontWeight: 'bold', padding: '16px' }}
+                          itemStyle={{ color: '#60a5fa' }}
+                       />
+                       <Area 
+                          type="monotone" 
+                          dataKey="volume" 
+                          stroke="#3b82f6" 
+                          strokeWidth={6} 
+                          fillOpacity={1} 
+                          fill="url(#chartGlow)" 
+                          animationDuration={2500}
+                       />
+                    </AreaChart>
+                 </ResponsiveContainer>
                </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-20 sm:py-32 px-4 sm:px-6 bg-slate-50">
-         <div className="max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-               <div className="text-center lg:text-left">
-                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter mb-6 sm:mb-8 italic uppercase leading-tight">{t.pricingTitle}</h2>
-                  <p className="text-lg sm:text-xl text-slate-500 mb-8 sm:mb-10 leading-relaxed font-medium">{t.pricingDesc}</p>
-                  
-                  <div className="space-y-6 mb-10 text-left">
-                     <div className="flex gap-4 sm:gap-6 items-start">
-                        <div className="w-12 h-12 bg-white border border-slate-200 shadow-lg rounded-2xl flex items-center justify-center shrink-0 text-blue-600 font-black text-xl">1</div>
-                        <div>
-                           <h4 className="font-black text-slate-900 uppercase tracking-tight mb-1">{t.subscriptionContract}</h4>
-                           <p className="text-sm text-slate-500 leading-snug">{t.subscriptionDetail}</p>
-                        </div>
-                     </div>
-                     <div className="flex gap-4 sm:gap-6 items-start">
-                        <div className="w-12 h-12 bg-white border border-slate-200 shadow-lg rounded-2xl flex items-center justify-center shrink-0 text-blue-600 font-black text-xl">2</div>
-                        <div>
-                           <h4 className="font-black text-slate-900 uppercase tracking-tight mb-1">{t.variablePart}</h4>
-                           <p className="text-sm text-slate-500 leading-snug">{t.variableDetail}</p>
-                        </div>
-                     </div>
-                  </div>
-
-                  <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-                     {[t.noHiddenFees, t.noUserFees, t.noTimeLimits].map(badge => (
-                       <span key={badge} className="px-4 py-2 bg-white text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 shadow-sm">
-                          {badge}
-                       </span>
-                     ))}
-                  </div>
-               </div>
-
-               <div className="bg-slate-900 rounded-[40px] p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-8 text-6xl sm:text-9xl font-black opacity-5 italic pointer-events-none transition-transform group-hover:scale-110">SAVE</div>
-                  <h3 className="text-2xl sm:text-3xl font-black mb-8 italic text-blue-400 uppercase tracking-tighter">{t.whyBeneficial}</h3>
-                  <div className="space-y-6 mb-10">
-                     {[t.benefit1, t.benefit2, t.benefit3, t.benefit4].map(benefit => (
-                       <div key={benefit} className="flex gap-3 items-center">
-                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-[10px] font-black shrink-0 shadow-[0_0_15px_rgba(34,197,94,0.4)]">✓</div>
-                          <span className="font-bold text-base sm:text-lg leading-tight">{benefit}</span>
-                       </div>
-                     ))}
-                  </div>
-                  <button 
-                     onClick={onStart}
-                     className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl sm:rounded-3xl font-black uppercase text-xs tracking-[0.2em] transition-all transform hover:scale-[1.02] shadow-2xl shadow-blue-500/20"
-                  >
-                     {t.requestOffer}
-                  </button>
+      {/* Economics Section */}
+      <section id="economy" className="py-24 md:py-32 px-6 bg-white text-left overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-20 md:mb-24 text-center">
+            <h2 className="text-4xl md:text-7xl font-black tracking-tighter italic uppercase mb-6">{t.economyTitle}</h2>
+            <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto">{t.economyDesc}</p>
+          </div>
+          <div className="grid lg:grid-cols-2 gap-10 items-stretch">
+            <div className={`bg-slate-50 p-10 md:p-20 rounded-[56px] border border-slate-100 transition-all duration-1000 ${isVisible('economy') ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
+               <h3 className="text-3xl font-black text-slate-400 uppercase italic mb-16 tracking-tighter">{t.traditionalModel}</h3>
+               <div className="space-y-10">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-6"><span className="font-bold text-slate-400">{t.doctorSalary}</span><span className="font-black text-red-500 text-lg uppercase tracking-widest">{t.salaryRange}</span></div>
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-6"><span className="font-bold text-slate-400">{t.throughput}</span><span className="font-black text-red-500 text-lg uppercase tracking-widest">{t.limited}</span></div>
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-6"><span className="font-bold text-slate-400">{t.qualityInterp}</span><span className="font-black text-red-500 text-lg uppercase tracking-widest">{t.subjective}</span></div>
                </div>
             </div>
-         </div>
-      </section>
-
-      {/* Statistics Section */}
-      <section className="py-20 sm:py-32 px-4 sm:px-6 bg-slate-950 text-white overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,#1e3a8a_0%,transparent_50%)] opacity-20"></div>
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="mb-12 sm:mb-20 text-center lg:text-left">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter mb-4 uppercase italic">{t.statsTitle}</h2>
-            <p className="text-slate-400 max-w-2xl font-medium text-sm sm:text-base mx-auto lg:mx-0">{t.statsDesc}</p>
-          </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-16 sm:mb-20">
-            {[
-              { v: '40k', l: t.stat1Label, d: t.stat1Desc },
-              { v: '+30%', l: t.stat2Label, d: t.stat2Desc },
-              { v: '3x', l: t.stat3Label, d: t.stat3Desc },
-              { v: '1-5%', l: t.stat4Label, d: t.stat4Desc }
-            ].map(stat => (
-              <div key={stat.l} className="group">
-                <div className={`text-4xl sm:text-6xl font-black mb-2 tracking-tighter italic ${stat.v === '1-5%' ? 'text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'text-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]'}`}>{stat.v}</div>
-                <p className="text-[10px] sm:text-sm font-bold uppercase tracking-widest text-slate-400 mb-2">{stat.l}</p>
-                <p className="hidden sm:block text-xs text-slate-500 leading-relaxed opacity-60 font-medium">{stat.d}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800 p-6 sm:p-10 rounded-[32px] sm:rounded-[40px] shadow-2xl">
-             <h3 className="text-lg sm:text-xl font-black mb-6 flex items-center gap-4 uppercase italic tracking-tighter">
-                <span className="w-2 h-8 bg-blue-600 rounded-full"></span>
-                {t.epilepsyChartTitle}
-             </h3>
-             <div className="h-60 sm:h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={epilepsyData}>
-                    <defs>
-                      <linearGradient id="colorInc" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="year" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#475569" fontSize={10} tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', fontSize: '10px' }}
-                      itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                    />
-                    <Area type="monotone" dataKey="incidence" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorInc)" name={t.chartDataLabel} />
-                    <Area type="monotone" dataKey="forecast" stroke="#ef4444" strokeWidth={4} strokeDasharray="8 8" fillOpacity={0} name={t.chartForecastLabel} />
-                  </AreaChart>
-                </ResponsiveContainer>
-             </div>
+            <div className={`bg-blue-600 p-10 md:p-20 rounded-[56px] shadow-3xl shadow-blue-500/30 text-white relative overflow-hidden transition-all duration-1000 delay-300 ${isVisible('economy') ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
+               <div className="absolute top-0 right-0 p-12 text-[15rem] font-black text-white/5 italic -rotate-12 pointer-events-none translate-x-20">A+++</div>
+               <h3 className="text-3xl font-black text-white uppercase italic mb-16 tracking-tighter relative z-10">{t.centralizedAnalysis}</h3>
+               <div className="space-y-10 relative z-10">
+                  <div className="flex justify-between items-center border-b border-white/20 pb-6"><span className="font-bold text-blue-100">{t.costSavings}</span><span className="font-black text-green-300 text-3xl tracking-tighter">{t.costReduction}</span></div>
+                  <div className="flex justify-between items-center border-b border-white/20 pb-6"><span className="font-bold text-blue-100">{t.scaling}</span><span className="font-black text-green-300 text-lg uppercase tracking-widest">{t.doctorCapacity}</span></div>
+                  <div className="flex justify-between items-center border-b border-white/20 pb-6"><span className="font-bold text-blue-100">{t.standardization}</span><span className="font-black text-green-300 text-lg uppercase tracking-widest">Standardized</span></div>
+               </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="py-20 sm:py-32 px-4 sm:px-6 bg-slate-50 relative">
-        <div className="max-w-4xl mx-auto relative z-10">
-          <div className="text-center mb-16 sm:mb-20">
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tighter italic uppercase">{t.faqTitle}</h2>
+      {/* FAQ / Legal */}
+      <section id="legal" className="py-24 md:py-32 px-6 bg-white text-left">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-24 md:mb-32">
+             <h2 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-8">{t.legalTitle}</h2>
+             <h3 className="text-4xl md:text-7xl font-black tracking-tighter italic uppercase mb-10 leading-[0.9] text-slate-900">{t.legalSubtitle}</h3>
+             <p className="text-xl md:text-2xl text-slate-500 font-medium leading-relaxed bg-slate-50 p-8 md:p-12 rounded-[48px] border border-slate-100">{t.legalDesc}</p>
           </div>
-          <div className="bg-white rounded-[40px] border border-slate-100 shadow-xl p-6 sm:p-12">
+          <div className="bg-white rounded-[56px] border border-slate-200 shadow-3xl p-10 md:p-20">
+            <h4 className="text-3xl font-black uppercase italic mb-12 tracking-tighter">{t.faqTitle}</h4>
             <FAQItem question={t.faqQ1} answer={t.faqA1} />
             <FAQItem question={t.faqQ2} answer={t.faqA2} />
             <FAQItem question={t.faqQ3} answer={t.faqA3} />
@@ -433,41 +333,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart, lang, onLanguageChan
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-950 text-white py-16 px-4 sm:px-6 border-t border-slate-900">
-         <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-12">
+      <footer className="bg-slate-950 text-white py-24 px-6 border-t border-white/5 text-left">
+         <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-20">
             <div className="md:col-span-2">
-               <div className="flex items-center gap-3 mb-6">
-                 <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-black text-white text-xl">B</div>
-                 <span className="text-xl sm:text-2xl font-black tracking-tighter italic">{APP_NAME}</span>
+               <div className="flex items-center gap-4 mb-10">
+                 <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-white text-2xl">B</div>
+                 <span className="text-3xl font-black tracking-tighter italic uppercase">{APP_NAME}</span>
                </div>
-               <p className="text-slate-500 font-medium max-w-sm mb-8 leading-relaxed font-medium">{t.footerDesc}</p>
-               
-               {/* Social Buttons */}
-               <div className="flex items-center gap-4 mt-8">
-                  <a href="#" className="p-3 bg-slate-900 rounded-xl hover:bg-blue-600 transition-all text-slate-400 hover:text-white border border-white/5">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.17.054 1.805.249 2.227.412.562.218.96.48 1.382.902.422.422.684.82.902 1.382.163.422.358 1.057.412 2.227.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.054 1.17-.249 1.805-.412 2.227-.218.562-.48.96-.902 1.382-.422.422-.82.684-1.382.902-.422.163-1.057.358-2.227.412-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.17-.054-1.805-.249-2.227-.412-.562-.218-.96-.48-1.382-.902-.422-.422-.684-.82-.902-1.382-.163-.422-.358-1.057-.412-2.227-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.054-1.17.249-1.805.412-2.227.218-.562.48-.96.902-1.382.422-.422.82-.684 1.382-.902.422-.163 1.057-.358 2.227-.412 1.266-.058 1.646-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-1.277.057-2.149.258-2.912.553-.789.307-1.458.718-2.124 1.384-.666.666-1.077 1.335-1.384 2.124-.295.763-.496 1.635-.553 2.912-.058 1.28-.072 1.688-.072 4.947s.014 3.667.072 4.947c.057 1.277.258 2.149.553 2.912.307.789.718 1.458 1.384 2.124.666.666 1.335 1.077 2.124 1.384.763.295 1.635.496 2.912.553 1.28.058 1.688.072 4.947.072s3.667-.014 4.947-.072c1.277-.057 2.149-.258 2.912-.553.789-.307 1.458-.718 2.124-1.384.666-.666 1.077-1.335 1.384-2.124.763-.295 1.635-.496 2.912-.553 1.28-.058 1.688-.072 4.947-.072s3.667.014 4.947.072c1.277.057 2.149.258 2.912.553.789.307 1.458.718 2.124 1.384.666.666 1.077 1.335 1.384 2.124.763.295 1.635.496 2.912.553 1.28.058 1.688.072 4.947.072zM12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                  </a>
-                  <a href="#" className="p-3 bg-slate-900 rounded-xl hover:bg-black transition-all text-slate-400 hover:text-white border border-white/5">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.023c.131.005.262.012.394.022.133.01.265.023.396.039.132.016.262.036.393.059.13.024.259.052.388.084l.383.097c.126.035.25.075.374.12l.366.132c.12.048.238.1.354.156l.341.17c.112.06.221.124.328.19l.314.204c.101.071.2.147.296.226l.278.24c.089.083.176.171.258.26l.24.288c.076.096.148.196.216.298l.192.31c.061.107.119.216.171.328l.148.341c.046.117.088.235.126.354l.1.366c.035.124.064.249.089.375l.067.382c.023.131.04.263.053.395l.024.397c.007.133.01.266.009.398v.01l.001.003c.001.127-.002.254-.008.381l-.023.396c-.012.132-.029.264-.051.396l-.066.388c-.023.131-.051.261-.083.39l-.096.383c-.035.127-.074.253-.119.378l-.132.368c-.048.121-.101.24-.157.357l-.171.343c-.06.114-.124.225-.192.333l-.206.319c-.071.103-.148.204-.229.301l-.242.283c-.083.091-.171.179-.263.262l-.286.244c-.097.078-.198.151-.301.219l-.312.195c-.108.063-.22.122-.334.174l-.344.15c-.118.047-.239.09-.36.128l-.369.102c-.126.036-.253.065-.382.09l-.385.068c-.131.023-.264.04-.399.053l-.401.024c-.133.007-.267.01-.401.008l-.01.001h-.001c-.133 0-.266-.003-.399-.009l-.396-.023c-.133-.012-.265-.029-.398-.051l-.391-.066c-.131-.023-.263-.051-.393-.083l-.386-.096c-.128-.035-.255-.074-.381-.119l-.371-.132c-.122-.048-.242-.101-.36-.157l-.345-.171c-.115-.06-.228-.124-.337-.192l-.321-.206c-.104-.071-.205-.148-.303-.229l-.285-.242c-.092-.083-.181-.171-.265-.263l-.246-.286c-.079-.097-.152-.198-.221-.301l-.196-.312c-.064-.108-.123-.22-.176-.334l-.151-.344c-.048-.118-.091-.239-.129-.36l-.103-.369c-.037-.126-.066-.253-.092-.382l-.068-.385c-.024-.131-.04-.264-.054-.399l-.024-.401c-.008-.133-.011-.267-.008-.401l-.001-.01v-.001c0-.133.003-.266.009-.399l.023-.396c.012-.133.029-.265.051-.398l.066-.391c.023-.131.051-.263.083-.393l.096-.386c.035-.128.074-.255.119-.381l.132-.371c.048-.122.101-.242.157-.36l.171-.345c.06-.115.124-.228.192-.337l.206-.321c.071-.104.148-.205.229-.303l.242-.285c.083-.092.171-.181.263-.265l.286-.246c.097-.079.198-.152.301-.221l.312-.196c.108-.064.22-.123.334-.176l.344-.151c.118-.048.239-.091.36-.129l.369-.103c.126-.037.253-.066.382-.092l.385-.068c.131-.024.264-.04.399-.054l.401-.024c.133-.008.267-.011.401-.008l.01-.001h.001zm-3.09 18.067c-.201.002-.403.004-.606.004-1.802 0-3.149-.525-4.135-1.528-1.004-1.021-1.428-2.39-1.428-4.576V6.782H1.144V4.54h2.122V1.525h2.417v3.015h3.111v2.242H5.683v4.613c0 .88.136 1.488.423 1.836.275.334.78.497 1.549.497.34 0 .685-.04 1.037-.12l.743 2.012c-.417.151-.834.252-1.25.302l-.24.015z"/></svg>
-                  </a>
-                  <a href="#" className="p-3 bg-slate-900 rounded-xl hover:bg-blue-700 transition-all text-slate-400 hover:text-white border border-white/5">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                  </a>
-               </div>
+               <p className="text-slate-500 font-medium max-w-sm mb-12 leading-relaxed text-lg">{t.baicurexDefinition}</p>
             </div>
             <div>
-               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 mb-6">{t.b2bContacts}</h4>
-               <p className="text-base font-black mb-1 italic tracking-tight">baicurexai@gmail.com</p>
-               <p className="text-xs text-slate-500 font-medium leading-relaxed">{t.address}</p>
+               <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-10">{t.b2bContacts}</h4>
+               <p className="text-xl font-black mb-2 italic tracking-tight">baicurexai@gmail.com</p>
+               <p className="text-sm text-slate-500 font-medium">{t.address}</p>
             </div>
             <div>
-               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4">{t.operations}</h4>
-               <p className="text-xs font-bold italic">{t.workingHours}</p>
+               <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-10">{t.operations}</h4>
+               <p className="text-sm font-black italic uppercase tracking-widest">{t.workingHours}</p>
             </div>
-         </div>
-         <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-slate-900 text-center">
-            <p className="text-[8px] sm:text-[10px] text-slate-600 font-black uppercase tracking-[0.3em]">{t.copyright}</p>
          </div>
       </footer>
     </div>
